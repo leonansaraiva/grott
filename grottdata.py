@@ -25,8 +25,11 @@ def format_multi_line(prefix, string, size=80):
             size -= 1
     return '\n'.join([prefix + line for line in textwrap.wrap(string, size)])
 
+def printHex(listTestByteAsDecimal):
+    return [hex(x) for x in listTestByteAsDecimal]
 #decrypt data. 
 def decrypt(decdata) :   
+    print('------------------Decrypt----------------------')
 
     ndecdata = len(decdata)
 
@@ -34,15 +37,16 @@ def decrypt(decdata) :
     mask = "Growatt"
     hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
     nmask = len(hex_mask)
-
+    print('mask'+ str(hex_mask))
     #start decrypt routine 
     unscrambled = list(decdata[0:8])                                            #take unscramble header
-    
+    payload = decdata[8:].hex()
+    print(payload)
+
     for i,j in zip(range(0,ndecdata-8),cycle(range(0,nmask))): 
         unscrambled = unscrambled + [decdata[i+8] ^ int(hex_mask[j],16)]
     
     result_string = "".join("{:02x}".format(n) for n in unscrambled)
-    
     print("\t - " + "Growatt data decrypted V2")   
     return result_string        
 
@@ -57,11 +61,25 @@ def procdata(conf,data):
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
+    listTestByteAsDecimal = list(data)
+    listTestByteAsHex = printHex(listTestByteAsDecimal)
+
+    print('Data Deca:')
+    print(listTestByteAsDecimal)
+    print('Data Hex:')
+    print(listTestByteAsHex)
+  
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
     buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
-   
+
+    print('Data header dec:')
+    print(header)
+    print('Data header hex:')
+    listHeader = printHex(list(data[0:8]))
+    print(listHeader)
+
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -69,13 +87,16 @@ def procdata(conf,data):
             print("\t - " + "Grott automatic protocol detection")  
             print("\t - " + "Grott data record length", ndata)
         #print(header)
-        layout = "T" + header[6:8] + header[12:14] + header[14:16]
+        h1 = header[6:8]
+        h2 = header[12:14]
+        h3 = header[14:16]
+        layout = "T" + h1 + h2 + h3
         if ndata > 375:  layout = layout + "X"
 
         if conf.invtype != "default" :
             layout = layout + conf.invtype.upper()
 
-        if header[14:16] == "50" : buffered = "yes"
+        if h3 == "50" : buffered = "yes"
         else: buffered = "no" 
 
         if conf.verbose : print("\t - " + "layout   : ", layout)
@@ -85,7 +106,7 @@ def procdata(conf,data):
         except:
             #try generic if generic record exist
             if conf.verbose : print("\t - " + "no matching record layout found, try generic")
-            if header[14:16] in ("04","50") :
+            if h3 in ("04","50") :
                 layout = layout.replace(header[12:16], "NNNN")
                 try:
                     # does generic record layout record exists? 
@@ -120,9 +141,9 @@ def procdata(conf,data):
     if conf.verbose: 
         print("\t - " + 'Growatt plain data:')
         print(format_multi_line("\t\t ", result_string))
-        #debug only: print(result_string)
 
-    # test position : 
+        #debug only: print(result_string)
+    # test position :
     # print(result_string.find('0074' ))
 
     # Test length if < 12 it is a data ack record, if novalidrec flag is true it is not a (recognized) data record  
@@ -163,20 +184,25 @@ def procdata(conf,data):
                 if ((include) or (conf.includeall)): 
                     try:
                         #try if key type is specified  
-                        keytype = conf.recorddict[layout][keyword]["type"]           
+                        keytype = conf.recorddict[layout][keyword]["type"]   
+                        _start = conf.recorddict[layout][keyword]["value"]
+                        _end = conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)   
+                        _data = result_string[_start:_end]   
+                        _result = list(result_string)
+  
                     except: 
                         #if not default is num
                         keytype = "num"               
                     if keytype == "text" :
-                        definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
+                        definedkey[keyword] = _data
                         definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
                         #print(definedkey[keyword])
                     if keytype == "num" :
                     #else:                    
-                        definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
+                      definedkey[keyword] = int(_data,16)                                     
                     if keytype == "numx" :
                         #process signed integer 
-                        keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
+                        keybytes = bytes.fromhex(_data)
                         definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
                     
         # test if pvserial was defined, if not take inverterid from config. 
@@ -332,7 +358,10 @@ def procdata(conf,data):
 
         # if record is a smart monitor record use datalogserial as device (to distinguish from solar record) 
         # and filter if invalid record (0 < voltage_l1 > 500 )
-        if header[14:16] != "20" :
+        h5 = header[14:16]
+        if(h5=="20"):
+            print("######################" + header[14:16])
+        if h5 != "20" :
             jsonobj = {
                         "device" : definedkey["pvserial"],
                         "time" : jsondate, 
@@ -541,8 +570,9 @@ def procdata(conf,data):
         import importlib
         try: 
             module = importlib.import_module(conf.extname, package=None)
-        except :
-            if conf.verbose : print("\t - " + "Grott import extension failed:", conf.extname)      
+        except NameError:
+            if conf.verbose : print("\t - " + "Grott import extension failed:", conf.extname)   
+            print(NameError)   
             return
         try:
             ext_result = module.grottext(conf,result_string,jsonmsg) 

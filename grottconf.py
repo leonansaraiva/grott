@@ -108,7 +108,7 @@ class Conf :
 
         #prepare influxDB
         if self.influx :  
-            if self.ifip == "localhost" : self.ifip = '0.0.0.0'
+            #if self.ifip == "localhost" : self.ifip = '0.0.0.0'
             if self.influx2 == False: 
                 if self.verbose :  print("")
                 if self.verbose :  print("\t - " + "Grott InfluxDB V1 initiating started")

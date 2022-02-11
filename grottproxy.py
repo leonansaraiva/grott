@@ -10,7 +10,8 @@ import sys
 import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
-import time, json, datetime, codecs
+import time, json, codecs
+from datetime import datetime
 ## to resolve errno 32: broken pipe issue (only linux)
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
@@ -122,8 +123,10 @@ class Proxy:
     def on_recv(self,conf):
         data = self.data      
         print("")
-        print("\t - " + "Growatt packet received:") 
+        today = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+        print("\t - " + "Growatt packet received:   " + today) 
         print("\t\t ", self.channel[self.s])
+        print(data)
         # FILTER!!!!!!!! Detect if configure data is sent!
         header = "".join("{:02x}".format(n) for n in data[0:8])
         if conf.blockcmd : 
@@ -146,7 +149,7 @@ class Proxy:
                             blockflag = False
                             if confcmd == "001f": confcmd = "Time"
                             if confcmd == "0011": confcmd = "Change IP"
-                            if conf.verbose : print("\t - Grott: Configure command not blocked : ", confcmd)    
+                            if conf.verbose : print("\t - Grott: Configure command not blocked : ->>>>>>>>>>>>>>>>>>", confcmd)    
                     else : 
                         #All configure inverter commands will be blocked
                         if conf.verbose : print("\t - Grott: Inverter Configure command detected")
