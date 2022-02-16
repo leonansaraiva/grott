@@ -167,5 +167,5 @@ class Proxy:
             #process received data
             procdata(conf,data)    
         else:     
-            if conf.verbose: print("\t - " + 'Data less then minimum record length, data not processed') 
+            if conf.verbose: print("\t - " + 'Data less then minimum record length, data not processed = ' + str(len(data)))
                 

@@ -38,6 +38,11 @@ def decrypt(decdata) :
     hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
     nmask = len(hex_mask)
     print('mask'+ str(hex_mask))
+    dataLogger = 'HMEXXX02201203D0'
+    hex_dataLogger = ['{:02x}'.format(ord(x)) for x in dataLogger]    
+    print('hex_dataLogger'+ str(hex_dataLogger))
+
+
     #start decrypt routine 
     unscrambled = list(decdata[0:8])                                            #take unscramble header
     payload = decdata[8:].hex()
