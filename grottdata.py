@@ -12,6 +12,7 @@ import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import json, codecs 
 # requests
+from termcolor import colored
 
 #import mqtt                       
 import paho.mqtt.publish as publish
@@ -28,6 +29,31 @@ def format_multi_line(prefix, string, size=80):
 def printHex(listTestByteAsDecimal):
     return [hex(x) for x in listTestByteAsDecimal]
 #decrypt data. 
+def decryptH(decdata) :   
+    print('------------------Decrypt h----------------------')
+
+    ndecdata = len(decdata)
+
+    # Create mask and convert to hexadecimal
+    mask = "Growatt"
+    hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
+    nmask = len(hex_mask)
+    # print('mask'+ str(hex_mask))
+    # dataLogger = 'HMEXXX02201203D0'
+    # hex_dataLogger = ['{:02x}'.format(ord(x)) for x in dataLogger]    
+    # print('hex_dataLogger'+ str(hex_dataLogger))
+
+
+    #start decrypt routine 
+    unscrambled = []                                          #take unscramble header
+
+    for i,j in zip(range(0,ndecdata),cycle(range(0,nmask))): 
+        unscrambled = unscrambled + [decdata[i] ^ int(hex_mask[j],16)]
+    
+    result_string = "".join("{:02x}".format(n) for n in unscrambled)
+    print("\t - " + "Growatt data decrypted V2")   
+    return result_string        
+
 def decrypt(decdata) :   
     print('------------------Decrypt----------------------')
 
@@ -37,16 +63,16 @@ def decrypt(decdata) :
     mask = "Growatt"
     hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
     nmask = len(hex_mask)
-    print('mask'+ str(hex_mask))
-    dataLogger = 'HMEXXX02201203D0'
-    hex_dataLogger = ['{:02x}'.format(ord(x)) for x in dataLogger]    
-    print('hex_dataLogger'+ str(hex_dataLogger))
+    # print('mask'+ str(hex_mask))
+    # dataLogger = 'HMEXXX02201203D0'
+    # hex_dataLogger = ['{:02x}'.format(ord(x)) for x in dataLogger]    
+    # print('hex_dataLogger'+ str(hex_dataLogger))
 
 
     #start decrypt routine 
     unscrambled = list(decdata[0:8])                                            #take unscramble header
     payload = decdata[8:].hex()
-    print(payload)
+    # print(payload)
 
     for i,j in zip(range(0,ndecdata-8),cycle(range(0,nmask))): 
         unscrambled = unscrambled + [decdata[i+8] ^ int(hex_mask[j],16)]
@@ -69,10 +95,10 @@ def procdata(conf,data):
     listTestByteAsDecimal = list(data)
     listTestByteAsHex = printHex(listTestByteAsDecimal)
 
-    print('Data Deca:')
-    print(listTestByteAsDecimal)
-    print('Data Hex:')
-    print(listTestByteAsHex)
+    # print('Data Deca:')
+    # print(listTestByteAsDecimal)
+    # print('Data Hex:')
+    # print(listTestByteAsHex)
   
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
@@ -103,16 +129,23 @@ def procdata(conf,data):
 
         if h3 == "50" : buffered = "yes"
         else: buffered = "no" 
-
-        if conf.verbose : print("\t - " + "layout   : ", layout)
+      
+        if conf.verbose : print(colored("\t - " + "layout   : "+ layout, 'yellow')) 
         try:            
             # does record layout record exists? 
             test = conf.recorddict[layout]
         except:
             #try generic if generic record exist
             if conf.verbose : print("\t - " + "no matching record layout found, try generic")
-            if h3 in ("04","50") :
+            if h3 in ("04","505") :
                 layout = layout.replace(header[12:16], "NNNN")
+                print(colored("\t ################# layout   #################", 'red')) 
+                print(colored("\t - " + "layout   : "+ layout, 'red')) 
+                print(colored("\t ################# layout   #################", 'red')) 
+                print(colored("\t ################# layout   #################", 'red')) 
+                print(colored("\t ################# layout   #################", 'red')) 
+                print(colored("\t ################# layout   #################", 'red')) 
+
                 try:
                     # does generic record layout record exists? 
                     test = conf.recorddict[layout]
@@ -144,7 +177,7 @@ def procdata(conf,data):
         if conf.verbose: print("\t - " + "Grott Growatt unencrypted data used")                                      
                                                         
     if conf.verbose: 
-        print("\t - " + 'Growatt plain data:')
+        print("\t - " + 'Growatt plain data: ' + str(len(result_string)))
         print(format_multi_line("\t\t ", result_string))
 
         #debug only: print(result_string)
@@ -201,6 +234,11 @@ def procdata(conf,data):
                     if keytype == "text" :
                         definedkey[keyword] = _data
                         definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
+                        definedkey[keyword] = definedkey[keyword].rstrip('\0')
+                        # if definedkey[keyword] == 'pvserial':
+                        #     fillZeros = '000000'
+                        #     definedkey[keyword] = definedkey[keyword]+fillZeros
+                        #     definedkey[keyword] = definedkey[keyword][:16]
                         #print(definedkey[keyword])
                     if keytype == "num" :
                     #else:                    
@@ -357,7 +395,8 @@ def procdata(conf,data):
                         printkey = "{:.1f}".format(definedkey[key]/keydivide)          
                     else :
                         printkey = definedkey[key]
-                    print("\t\t - ",key.ljust(20) + " : ",printkey)              
+                    # print("\t\t - ",key.ljust(20) + " : ",printkey)              
+                    print(colored("\t\t - "+key.ljust(20) + " : "+str(printkey), 'blue')) 
 
         #create JSON message  (first create obj dict and then convert to a JSON message)                   
 
@@ -531,7 +570,10 @@ def procdata(conf,data):
             ifobj = {
                         "measurement" : definedkey["pvserial"],
                         "time" : ifdt,
-                        "fields" : {}
+                        "fields" : {
+                            "layout":layout,
+                            "tick" : ifdt,
+                        }
                     }    
         else: 
             ifobj = {

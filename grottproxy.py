@@ -12,11 +12,14 @@ import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import time, json, codecs
 from datetime import datetime
+from rx import catch
+from termcolor import colored
+
 ## to resolve errno 32: broken pipe issue (only linux)
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
 
-from grottdata import procdata, decrypt
+from grottdata import procdata, decrypt, decryptH
 
 #import mqtt                       
 import paho.mqtt.publish as publish
@@ -127,6 +130,18 @@ class Proxy:
         print("\t - " + "Growatt packet received:   " + today) 
         print("\t\t ", self.channel[self.s])
         print(data)
+        bdata = decrypt(data) 
+        try:
+            serial = codecs.decode(bdata[:48], "hex").decode('utf-8')
+            serial = serial[-16:]
+            print(colored(serial, 'green')) 
+        except:
+            print(colored(bdata[:48], 'red')) 
+
+        print(colored(bdata, 'yellow')) 
+        print(colored(bdata[0:16], 'yellow')) 
+        print(colored('0000000000000000'+bdata[16:48], 'yellow')) 
+        print(colored('0000000000000000000000000000000000000000000000000000000000000000'+bdata[64:], 'yellow')) 
         # FILTER!!!!!!!! Detect if configure data is sent!
         header = "".join("{:02x}".format(n) for n in data[0:8])
         if conf.blockcmd : 
@@ -158,7 +173,7 @@ class Proxy:
             if header[12:16] in conf.recwl : blockflag = False     
 
             if blockflag : 
-                print("\t - Grott: Record blocked: ", header[12:16])
+                print(colored("\t - Grott: Record blocked: "+ header[12:16]))
                 return
 
         # send data to destination
