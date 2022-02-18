@@ -93,12 +93,12 @@ def procdata(conf,data):
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
     listTestByteAsDecimal = list(data)
-    listTestByteAsHex = printHex(listTestByteAsDecimal)
+    listTestByteAsHex = "".join("{:02x}".format(n) for n in data)
 
     # print('Data Deca:')
     # print(listTestByteAsDecimal)
     # print('Data Hex:')
-    # print(listTestByteAsHex)
+    print(listTestByteAsHex)
   
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
@@ -110,6 +110,14 @@ def procdata(conf,data):
     print('Data header hex:')
     listHeader = printHex(list(data[0:8]))
     print(listHeader)
+    # descobrindo layout pelo numero de serie
+    bdata = decrypt(data) 
+    try:
+        serial = codecs.decode(bdata[76:92], "hex").decode('utf-8','ignore')
+        serial = serial[:6]
+        print('\tSerial Inversor: '+colored(serial, 'green')) 
+    except:
+        print(colored(bdata[:48], 'red')) 
 
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
@@ -129,7 +137,10 @@ def procdata(conf,data):
 
         if h3 == "50" : buffered = "yes"
         else: buffered = "no" 
-      
+
+        if serial == "ARF3K6":
+            layout = "T060104X"
+
         if conf.verbose : print(colored("\t - " + "layout   : "+ layout, 'yellow')) 
         try:            
             # does record layout record exists? 
@@ -137,7 +148,7 @@ def procdata(conf,data):
         except:
             #try generic if generic record exist
             if conf.verbose : print("\t - " + "no matching record layout found, try generic")
-            if h3 in ("04","505") :
+            if h3 in ("04","50") :
                 layout = layout.replace(header[12:16], "NNNN")
                 print(colored("\t ################# layout   #################", 'red')) 
                 print(colored("\t - " + "layout   : "+ layout, 'red')) 
@@ -182,13 +193,16 @@ def procdata(conf,data):
 
         #debug only: print(result_string)
     # test position :
-    # print(result_string.find('0074' ))
+    # print(result_string.find('02EE' ))
 
     # Test length if < 12 it is a data ack record, if novalidrec flag is true it is not a (recognized) data record  
-    if ndata < 12 or novalidrec == True: 
-        if conf.verbose : print("\t - " + "Grott data ack record or data record not defined no processing done") 
+    if ndata < 12 : 
+        if conf.verbose : print("\t - " + "Grott data ack record") 
         return
+    if novalidrec == True: 
+        if conf.verbose : print(colored("\t Grott data record not defined no processing done", 'red')) 
 
+        return
     # Inital flag to detect off real data is processed     
     dataprocessed = False
     
@@ -381,6 +395,9 @@ def procdata(conf,data):
             else: 
                 #dynamic print 
                 print("\t - " + "Grott values retrieved:")
+                print(colored("\t\t - Size                  : "+str(ndata), 'blue')) 
+                print(colored("\t\t - Layout                : "+layout, 'blue')) 
+
                 for key in definedkey : 
                     # test if there is an divide factor is specifed 
                     try:  
