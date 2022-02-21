@@ -139,7 +139,7 @@ class Proxy:
             print(colored(bdata[:48], 'red')) 
 #0041000602410103
 #004a000602410104
-        # print('\tHearder Datalogger: '+colored(bdata, 'yellow')) 
+        print('\tHearder Datalogger: '+colored(bdata, 'yellow')) 
         # print('\tHearder : '+colored(bdata[0:16], 'yellow')) 
         # print(colored('0000000000000000'+bdata[16:48], 'yellow')) 
         # print(colored('0000000000000000000000000000000000000000000000000000000000000000'+bdata[64:], 'yellow')) 
@@ -183,10 +183,25 @@ class Proxy:
                 print(colored("\t - Grott: Record blocked: "+ h_comd3))
                 return
 
+        h_comd1 = header[12:16]
+        if h_comd1  == "0118" : 
+            print(colored("\t - comando de restart "+ h_comd1,'red'))        
         # send data to destination
         destination = self.channel[self.s]
-        destination.send(data)
 
+
+        try:
+            for dest in self.channel:
+                hostname = dest.getpeername()
+                print(hostname[0],hostname[1])
+                if(hostname[0]=='10.100.33.56'):
+                    print('send to', hostname[0],hostname[1])
+                    dest.send(data)
+        except:
+            hostname = ""
+
+        destination.send(data)
+        print(colored( destination,'red'))
         #ignorar comandos que não representam dados
         h_comd = header[12:16]  
         if h_comd  == "0103" or h_comd  == "0150":         
