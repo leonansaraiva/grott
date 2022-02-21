@@ -145,7 +145,7 @@ class Proxy:
         # print(colored('0000000000000000000000000000000000000000000000000000000000000000'+bdata[64:], 'yellow')) 
         # FILTER!!!!!!!! Detect if configure data is sent!
         header = "".join("{:02x}".format(n) for n in data[0:8])
-        print(colored(header,'blue'))
+        print(colored("\t Header               : "+header, 'blue')) 
 
         if conf.blockcmd : 
             #standard everything is blocked!
@@ -187,10 +187,10 @@ class Proxy:
         destination = self.channel[self.s]
         destination.send(data)
 
-        
+        #ignorar comandos que não representam dados
         h_comd = header[12:16]  
         if h_comd  == "0103" or h_comd  == "0150":         
-            print(colored("\t - Grott: not decrypt data - blocked: "+ h_comd,'blue'))
+            print(colored("\t - Grott: not decrypt data - blocked: "+ h_comd,'red'))
             return
 
 

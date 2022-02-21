@@ -138,8 +138,16 @@ def procdata(conf,data):
         if h3 == "50" : buffered = "yes"
         else: buffered = "no" 
 
-        if serial == "ARF3K6":
-            layout = "T060104X"
+        # if serial == "ARF3K6":
+        #     layout = "T060104X"
+        # layout  = serial
+        for family in conf.families:
+            tSerial = conf.families[family]
+            if serial in tSerial:
+                print('Family:', family)
+                layout = family
+                break
+                
 
         if conf.verbose : print(colored("\t - " + "layout   : "+ layout, 'yellow')) 
         try:            
@@ -150,6 +158,8 @@ def procdata(conf,data):
             if conf.verbose : print("\t - " + "no matching record layout found, try generic")
             if h3 in ("04","50") :
                 layout = layout.replace(header[12:16], "NNNN")
+                print(colored("\t ################# layout   #################", 'red')) 
+                print(colored("\t ################# layout   #################", 'red')) 
                 print(colored("\t ################# layout   #################", 'red')) 
                 print(colored("\t - " + "layout   : "+ layout, 'red')) 
                 print(colored("\t ################# layout   #################", 'red')) 
@@ -395,8 +405,10 @@ def procdata(conf,data):
             else: 
                 #dynamic print 
                 print("\t - " + "Grott values retrieved:")
-                print(colored("\t\t - Size                  : "+str(ndata), 'blue')) 
-                print(colored("\t\t - Layout                : "+layout, 'blue')) 
+                print(colored("\t\t - Size                 : "+str(ndata), 'blue')) 
+                print(colored("\t\t - Layout               : "+layout, 'blue')) 
+                print(colored("\t\t - Header               : "+header, 'blue')) 
+
 
                 for key in definedkey : 
                     # test if there is an divide factor is specifed 

@@ -979,8 +979,6 @@ class Conf :
             "react_energy_kvar" : {"value" :416, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}   
         }}
 
-        
-
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
@@ -1001,8 +999,11 @@ class Conf :
                 print(x)
                 with open(x) as json_file: 
                     dicttemp = json.load(json_file) 
+                    if x == 'tFamilies.json':
+                        self.families = dicttemp
                     #print(dicttemp)
-                    self.recorddict.update(dicttemp)
+                    if x != 'tFamilies.json':
+                        self.recorddict.update(dicttemp)
                 
                 
         if self.verbose: print("\nGrott layout records loaded")

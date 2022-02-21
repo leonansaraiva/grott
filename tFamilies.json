@@ -1,0 +1,37 @@
+{
+    "TFA": 
+    [
+        "QVD193",
+        "GPE1K6",
+        "GQE2K0",
+        "GRE3K0",
+        "KPE8K0",
+        "BTF9K0",
+        "KQE10H",
+        "AUF10K",
+        "BAF13K",
+        "USE15K",
+        "YZE30K",
+        "HBE33K",
+        "ZAE40K",
+        "HJE15K",
+        "HKE20K",
+        "HLE22K"
+    ],
+     "TFB": 
+    [
+        "LFE2K5",
+        "ARF3K6",
+        "ASF4K6",
+        "GUE6K0",
+        "WUG20K",
+        "WVG25K"
+    ],
+    "TFC": 
+    [
+        "AFF50K",
+        "HEE60K",
+        "HHE80K"
+    ]
+}
+
