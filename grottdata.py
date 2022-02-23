@@ -203,7 +203,7 @@ def procdata(conf,data):
 
         #debug only: print(result_string)
     # test position :
-    # print(result_string.find('02EE' ))
+    # print(result_string.find('0e49' ))
 
     # Test length if < 12 it is a data ack record, if novalidrec flag is true it is not a (recognized) data record  
     if ndata < 12 : 
