@@ -203,7 +203,7 @@ def procdata(conf,data):
 
         #debug only: print(result_string)
     # test position :
-    byte_hex = "003f"
+    byte_hex = "01E2".lower()
     print(colored("\t " + byte_hex +" Position = " + str(result_string.find(byte_hex )),'magenta'))
 
     # Test length if < 12 it is a data ack record, if novalidrec flag is true it is not a (recognized) data record  
