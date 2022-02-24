@@ -24,14 +24,19 @@
         "ARF3K6",
         "ASF4K6",
         "GUE6K0",
-        "WUG20K",
-        "WVG25K"
+        "YDD192"
+
     ],
     "TFC": 
     [
-        "AFF50K",
+        "AFF50K", 
         "HEE60K",
         "HHE80K"
+    ],
+    "TFD": 
+    [
+        "WUG20K",
+        "WVG25K"
     ]
 }
 
